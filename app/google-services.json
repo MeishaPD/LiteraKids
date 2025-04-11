@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "913417571300",
+    "project_id": "literakids-20a6e",
+    "storage_bucket": "literakids-20a6e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:913417571300:android:a06fd8d8288d58edf055f1",
+        "android_client_info": {
+          "package_name": "brawijaya.example.literakids"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyALkyViMjxTWeAdc6IPTH_GXaYE7xjTL74"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:913417571300:android:7fe8a3ed14a7ac10f055f1",
+        "android_client_info": {
+          "package_name": "com.brawijaya.litera_kids"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyALkyViMjxTWeAdc6IPTH_GXaYE7xjTL74"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
