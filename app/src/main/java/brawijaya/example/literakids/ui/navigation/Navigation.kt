@@ -9,6 +9,7 @@ import androidx.navigation.compose.composable
 //import brawijaya.example.literakids.ui.screens.community.CommunityScreen
 import brawijaya.example.literakids.ui.screens.profile.ProfileScreen
 import brawijaya.example.literakids.ui.screens.auth.LoginScreen
+import brawijaya.example.literakids.ui.screens.auth.RegisterScreen
 import brawijaya.example.literakids.ui.screens.avatar.AvatarSelectionScreen
 
 //import brawijaya.example.literakids.ui.screens.auth.RegisterScreen
@@ -20,7 +21,7 @@ import brawijaya.example.literakids.ui.screens.avatar.AvatarSelectionScreen
 //import brawijaya.example.literakids.ui.screens.profile.AppUpdateScreen
 
 sealed class Screen(val route: String) {
-    object Home : Screen("home")
+//    object Home : Screen("home")
     object Library : Screen("library")
     object Community : Screen("community")
     object Profile : Screen("profile")
@@ -61,9 +62,9 @@ fun AppNavigation(navController: NavHostController) {
             LoginScreen(navController = navController)
         }
 
-//        composable(Screen.Register.route) {
-//            RegisterScreen(navController = navController)
-//        }
+        composable(Screen.Register.route) {
+            RegisterScreen(navController = navController)
+        }
 //
 //        composable(Screen.AccountInfo.route) {
 //            AccountInfoScreen(navController = navController)

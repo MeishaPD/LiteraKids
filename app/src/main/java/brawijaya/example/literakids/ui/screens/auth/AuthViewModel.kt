@@ -140,13 +140,6 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    fun signOut() {
-        authRepository.signOut()
-        _uiState.update { state ->
-            state.copy(isLoggedIn = false)
-        }
-    }
-
     fun clearError() {
         _uiState.update { state ->
             state.copy(error = "")

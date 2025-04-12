@@ -34,11 +34,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideFirestore(): FirebaseFirestore = Firebase.firestore
-
-    @Provides
-    @Singleton
-    fun provideFirebaseDatabase(): FirebaseDatabase = Firebase.database
+    fun provideFirebaseDatabase()  : FirebaseDatabase = Firebase.database
 
     @Provides
     @Singleton

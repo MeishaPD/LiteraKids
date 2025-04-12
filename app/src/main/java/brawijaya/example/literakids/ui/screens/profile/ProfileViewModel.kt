@@ -2,6 +2,7 @@ package brawijaya.example.literakids.ui.screens.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import brawijaya.example.literakids.data.model.UserData
 import brawijaya.example.literakids.data.repository.AuthRepository
 import brawijaya.example.literakids.data.repository.SettingsRepository
 import brawijaya.example.literakids.data.repository.UserRepository
@@ -13,18 +14,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
-data class UserData(
-    val kidName: String = "",
-    val kidUsername: String = "",
-    val kidAvatarId: Int = 1,
-    val kidLevel: Int = 1,
-    val kidXp: Int = 0,
-    val kidCoins: Int = 0,
-    val parentName: String = "",
-    val parentUsername: String = "",
-    val parentAvatarId: Int = 1
-)
 
 data class ProfileUiState(
     val isLoading: Boolean = false,
@@ -62,12 +51,18 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
 
-            val userData = userRepository.getUserData() ?: UserData()
-
-            _uiState.update { it.copy(
-                userData = userData as UserData,
-                isLoading = false
-            )}
+            try {
+                val userData = userRepository.getUserData()
+                _uiState.update { it.copy(
+                    userData = userData,
+                    isLoading = false
+                )}
+            } catch (e: Exception) {
+                _uiState.update { it.copy(
+                    isLoading = false,
+                    error = "Failed to load user data: ${e.message}"
+                )}
+            }
         }
     }
 
@@ -87,13 +82,26 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
 
-            userRepository.updateKidAvatar(avatarId)
-
-            _uiState.update { state ->
-                state.copy(
-                    userData = state.userData.copy(kidAvatarId = avatarId),
-                    isLoading = false
-                )
+            try {
+                val success = userRepository.updateKidAvatar(avatarId)
+                if (success) {
+                    _uiState.update { state ->
+                        state.copy(
+                            userData = state.userData.copy(kidAvatarId = avatarId),
+                            isLoading = false
+                        )
+                    }
+                } else {
+                    _uiState.update { it.copy(
+                        isLoading = false,
+                        error = "Failed to update avatar"
+                    )}
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(
+                    isLoading = false,
+                    error = "Error updating avatar: ${e.message}"
+                )}
             }
         }
     }
@@ -101,5 +109,9 @@ class ProfileViewModel @Inject constructor(
     fun signOut() {
         authRepository.signOut()
         _uiState.update { it.copy(isLoggedIn = false) }
+    }
+
+    fun clearError() {
+        _uiState.update { it.copy(error = "") }
     }
 }

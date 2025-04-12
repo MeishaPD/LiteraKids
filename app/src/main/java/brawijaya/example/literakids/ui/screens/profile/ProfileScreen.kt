@@ -10,11 +10,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.Image
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -26,18 +27,19 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.painterResource
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
+import brawijaya.example.literakids.R
 import brawijaya.example.literakids.ui.navigation.Screen
 import brawijaya.example.literakids.ui.theme.LiteraKidsTheme
+import coil.compose.AsyncImage
 
 @Composable
 fun ProfileScreen(
@@ -99,6 +101,7 @@ fun ProfileScreen(
                     name = uiState.userData.kidName,
                     username = uiState.userData.kidUsername,
                     avatarId = uiState.userData.kidAvatarId,
+                    avatarUrls = uiState.userData.avatarUrls,
                     onEditClick = { navController.navigate(Screen.AvatarSelection.route) }
                 )
 
@@ -116,6 +119,7 @@ fun ProfileScreen(
                     name = uiState.userData.parentName,
                     username = uiState.userData.parentUsername,
                     avatarId = uiState.userData.parentAvatarId,
+                    avatarUrls = uiState.userData.avatarUrls,
                     onEditClick = { showUnavailablePageToast(context) }
                 )
 
@@ -386,6 +390,7 @@ fun UserProfileCard(
     name: String,
     username: String,
     avatarId: Int,
+    avatarUrls: List<String> = emptyList(),
     onEditClick: () -> Unit
 ) {
     val gradient = Brush.horizontalGradient(
@@ -406,13 +411,60 @@ fun UserProfileCard(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
+            // Avatar image - use AsyncImage from Coil for loading from URL
+            if (avatarUrls.isNotEmpty()) {
+                // Use Coil to load image from URL
+                AsyncImage(
+                    model = avatarUrls[avatarId-1],
+                    contentDescription = "Avatar",
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(CircleShape)
+                        .background(Color.White),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                // Fallback to drawable resource
+                Image(
+                    painter = painterResource(id = R.drawable.default_avatar),
+                    contentDescription = "Avatar",
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(CircleShape)
+                        .background(Color.White)
+                )
+            }
 
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = name,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                )
+                Text(
+                    text = username,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = Color.White
+                    )
+                )
+            }
+
+            IconButton(onClick = onEditClick) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Edit",
+                    tint = Color.White
+                )
+            }
         }
     }
 }
 
-
-            fun showUnavailablePageToast(context: Context) {
+fun showUnavailablePageToast(context: Context) {
     Toast.makeText(context, "Halaman belum tersedia", Toast.LENGTH_SHORT).show()
 }
 
