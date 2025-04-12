@@ -1,4 +1,4 @@
-package brawijaya.example.literakids.ui.screens.childProfile.components
+package brawijaya.example.literakids.ui.components
 
 import android.app.DatePickerDialog
 import androidx.compose.foundation.clickable
