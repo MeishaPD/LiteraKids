@@ -1,10 +1,8 @@
 package brawijaya.example.literakids.data.repository
 
-import brawijaya.example.literakids.data.model.UserData
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.UserProfileChangeRequest
-import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -24,8 +22,7 @@ interface AuthRepository {
 }
 
 class AuthRepositoryImpl @Inject constructor(
-    private val auth: FirebaseAuth,
-    private val firestore: FirebaseFirestore
+    private val auth: FirebaseAuth
 ) : AuthRepository {
 
     override val currentUser: FirebaseUser?
@@ -45,19 +42,6 @@ class AuthRepositoryImpl @Inject constructor(
                     .setDisplayName(name)
                     .build()
                 user.updateProfile(profileUpdates).await()
-
-                // Save user data to Firestore
-                val userData = UserData(
-                    uid = user.uid,
-                    name = name,
-                    email = email,
-                    createdAt = System.currentTimeMillis()
-                )
-
-                firestore.collection("users")
-                    .document(user.uid)
-                    .set(userData)
-                    .await()
 
                 AuthResult.Success
             } else {

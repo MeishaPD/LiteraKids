@@ -303,7 +303,7 @@ fun RegisterScreen(
     // Success navigation
     LaunchedEffect(uiState.isLoggedIn) {
         if (uiState.isLoggedIn) {
-            navController.navigate(Screen.Home.route) {
+            navController.navigate(Screen.Login.route) {
                 popUpTo(Screen.Register.route) { inclusive = true }
             }
         }
