@@ -4,11 +4,12 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
-import brawijaya.example.literakids.data.repository.UserRepositoryImpl
 import brawijaya.example.literakids.data.repository.SettingsRepository
 import brawijaya.example.literakids.data.repository.SettingsRepositoryImpl
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ktx.database
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -37,14 +38,12 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideDataStore(@ApplicationContext context: Context): DataStore<Preferences> =
-        context.dataStore
+    fun provideFirebaseDatabase(): FirebaseDatabase = Firebase.database
 
     @Provides
     @Singleton
-    fun provideUserRepository(
-        firestore: FirebaseFirestore
-    ): UserRepository = UserRepositoryImpl(firestore)
+    fun provideDataStore(@ApplicationContext context: Context): DataStore<Preferences> =
+        context.dataStore
 
     @Provides
     @Singleton
