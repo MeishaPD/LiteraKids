@@ -62,7 +62,6 @@ fun ProfileScreen(
             .background(Color.White)
             .verticalScroll(scrollState)
     ) {
-        // Gradient header
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -87,15 +86,12 @@ fun ProfileScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Daftar Akun Button
         if (uiState.isLoggedIn) {
-            // User is logged in, show user profiles
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
             ) {
-                // Kid account section
                 Text(
                     text = "Akun Anak",
                     fontSize = 16.sp,
@@ -112,7 +108,6 @@ fun ProfileScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Parent account section
                 Text(
                     text = "Akun Orang Tua/Pendamping",
                     fontSize = 16.sp,
@@ -127,29 +122,8 @@ fun ProfileScreen(
                     onEditClick = { navController.navigate(Screen.ParentProfile.route) }
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Subscription button (not functional)
-                Button(
-                    onClick = { showUnavailablePageToast(context) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.LightGray
-                    )
-                ) {
-                    Text(
-                        text = "BUAT SUBSCRIPTION NYA CUY",
-                        fontSize = 16.sp,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
             }
         } else {
-            // User is not logged in, show register/login buttons
             Button(
                 onClick = {
                     navController.navigate(Screen.Register.route)
@@ -199,7 +173,6 @@ fun ProfileScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Profile Menu Items
         ProfileMenuItem(
             icon = {
                 Icon(
@@ -347,7 +320,6 @@ fun ProfileScreen(
 
     }
 
-    // Bottom Navigation
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -414,9 +386,7 @@ fun UserProfileCard(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
-            // Avatar image - use AsyncImage from Coil for loading from URL
             if (avatarUrl.isNotEmpty()) {
-                // Use Coil to load image from URL
                 AsyncImage(
                     model = avatarUrl,
                     contentDescription = "Avatar",
@@ -427,7 +397,6 @@ fun UserProfileCard(
                     contentScale = ContentScale.Crop
                 )
             } else {
-                // Fallback to drawable resource
                 Image(
                     painter = painterResource(id = R.drawable.default_avatar),
                     contentDescription = "Avatar",
@@ -667,23 +636,6 @@ fun BottomNavItem(
                 modifier = Modifier.size(24.dp)
             )
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun NavbarPreview() {
-    LiteraKidsTheme {
-        BottomNavigation(
-            currentRoute = Screen.Profile.route,
-//            onNavigate = { route ->
-//                navController.navigate(route) {
-//                    popUpTo(navController.graph.startDestinationId)
-//                    launchSingleTop = true
-//                }
-//            }
-            onNavigate = {}
-        )
     }
 }
 

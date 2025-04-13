@@ -101,7 +101,7 @@ class UserRepository @Inject constructor(
                                 relationship = userData["relationship"] as? String ?: "",
                                 coins = (userData["coin"] as? Long)?.toInt() ?: 0,
                                 type = userData["type"] as? String ?: "",
-                                ownedAvatars = ownedAvatarsList  // Add owned avatars to user data
+                                ownedAvatars = ownedAvatarsList
                             )
 
                             trySend(Result.success(user))
