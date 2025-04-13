@@ -63,6 +63,12 @@ fun ChildProfileScreen(
         }
     }
 
+    LaunchedEffect(state.updateSuccess) {
+        if (state.updateSuccess) {
+            Toast.makeText(context, "Profil berhasil diperbarui!", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -256,7 +262,7 @@ fun ChildProfileScreen(
                     )
 
                     OutlinedTextField(
-                        value = state.age,
+                        value = state.age.toString(),
                         onValueChange = { viewModel.updateAge(it) },
                         placeholder = { Text("Masukkan usia") },
                         modifier = Modifier.fillMaxWidth(),
@@ -275,8 +281,8 @@ fun ChildProfileScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         RadioButton(
-                            selected = state.gender == "male",
-                            onClick = { viewModel.updateGender("male") },
+                            selected = state.gender == "laki-laki",
+                            onClick = { viewModel.updateGender("laki-laki") },
                             colors = RadioButtonDefaults.colors(
                                 selectedColor = Color(0xFF5AD8FF),
                                 unselectedColor = Color(0xFF5AD8FF)
@@ -289,8 +295,8 @@ fun ChildProfileScreen(
                         )
 
                         RadioButton(
-                            selected = state.gender == "female",
-                            onClick = { viewModel.updateGender("female") },
+                            selected = state.gender == "perempuan",
+                            onClick = { viewModel.updateGender("perempuan") },
                             colors = RadioButtonDefaults.colors(
                                 selectedColor = Color(0xFF5AD8FF),
                                 unselectedColor = Color(0xFF5AD8FF)
@@ -336,8 +342,9 @@ fun ChildProfileScreen(
                             .height(50.dp),
                         shape = RoundedCornerShape(20.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF5AD8FF)
-                        )
+                            containerColor = Color(0xFF5AD8FF),
+                        ),
+                        enabled = !state.isLoading
                     ) {
                         Text(
                             text = "Perbarui Profil",
@@ -347,17 +354,6 @@ fun ChildProfileScreen(
                         )
                     }
                 }
-            }
-        }
-
-        if (state.isLoading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color(0xFF5AD8FF)),
-                contentAlignment = Alignment.Center
-            ) {
-                // loading indicator
             }
         }
     }

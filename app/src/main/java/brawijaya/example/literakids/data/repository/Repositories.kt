@@ -12,9 +12,12 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.GenericTypeIndicator
 import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
@@ -51,32 +54,32 @@ class UserRepository @Inject constructor(
                                 val parentData = userSnapshot.child("akunPendamping")
 
                                 val userData = UserData(
-                                    kidName = kidData.child("namaLengkap").getValue(String::class.java) ?: "Levi Annora",
-                                    kidUsername = kidData.child("username").getValue(String::class.java) ?: "@leviannora",
-                                    kidAvatarId = kidData.child("avatar").getValue(Int::class.java) ?: 1,
-                                    kidLevel = kidData.child("level").getValue(Int::class.java) ?: 1,
-                                    kidXp = kidData.child("xp").getValue(Int::class.java) ?: 0,
-                                    kidCoins = kidData.child("koin").getValue(Int::class.java) ?: 0,
-                                    parentName = parentData.child("namaLengkap").getValue(String::class.java) ?: "Adinda Febyola",
-                                    parentUsername = parentData.child("username").getValue(String::class.java) ?: "@febydinda",
-                                    parentAvatarId = parentData.child("avatar").getValue(Int::class.java) ?: 7,
-                                    avatarUrls = avatarUrls
+                                    fullName = kidData.child("namaLengkap").getValue(String::class.java) ?: "Levi Annora",
+                                    username = kidData.child("username").getValue(String::class.java) ?: "@leviannora",
+                                    avatarUrl = kidData.child("avatar").getValue(String::class.java) ?: "11",
+                                    level = kidData.child("level").getValue(Int::class.java) ?: 1,
+                                    currentXp = kidData.child("xp").getValue(Int::class.java) ?: 0,
+                                    coins = kidData.child("koin").getValue(Int::class.java) ?: 0
+                                    // parentName = parentData.child("namaLengkap").getValue(String::class.java) ?: "Adinda Febyola",
+                                    //  parentUsername = parentData.child("username").getValue(String::class.java) ?: "@febydinda",
+                                    // parentAvatarId = parentData.child("avatar").getValue(Int::class.java) ?: 7,
+                                    // avatarUrls = avatarUrls
                                 )
 
                                 continuation.resume(userData, onCancellation = null)
                             } else {
                                 // If no data exists, create dummy data that matches the screenshot
                                 val userData = UserData(
-                                    kidName = "Levi Annora",
-                                    kidUsername = "@leviannora",
-                                    kidAvatarId = 1,
-                                    kidLevel = 7,
-                                    kidXp = 90,
-                                    kidCoins = 420,
-                                    parentName = "Adinda Febyola",
-                                    parentUsername = "@febydinda",
-                                    parentAvatarId = 7,
-                                    avatarUrls = avatarUrls
+                                    fullName = "Levi Annora",
+                                    username = "@leviannora",
+                                    avatarUrl = "1",
+                                    level = 7,
+                                    currentXp = 90,
+                                    coins = 420,
+//                                    parentName = "Adinda Febyola",
+//                                    parentUsername = "@febydinda",
+//                                    parentAvatarId = 7,
+//                                    avatarUrls = avatarUrls
                                 )
 
                                 continuation.resume(userData, onCancellation = null)
@@ -108,7 +111,78 @@ class UserRepository @Inject constructor(
             return@withContext false
         }
     }
+
+    fun getUserById(userId: String): Flow<Result<UserData>> = callbackFlow {
+        val userRef = database.getReference("users").child(userId)
+
+        val listener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if (snapshot.exists()) {
+                    try {
+                        val typeIndicator = object : GenericTypeIndicator<HashMap<String, Any>>() {}
+                        val userData = snapshot.getValue(typeIndicator)
+
+                        Log.d("TAG", userData.toString())
+                        if (userData != null) {
+                            val user = UserData(
+                                id = userId,
+                                fullName = userData["fullName"] as? String ?: "",
+                                username = userData["username"] as? String ?: "",
+                                level = (userData["level"] as? Long)?.toInt() ?: 1,
+                                currentXp = (userData["currentXp"] as? Long)?.toInt() ?: 0,
+                                maxXp = (userData["maxXp"] as? Long)?.toInt() ?: 100,
+                                age = when (val age = userData["age"]) {
+                                    is Long -> age.toInt()
+                                    is Int -> age
+                                    is String -> age.toIntOrNull() ?: 0
+                                    is Double -> age.toInt()
+                                    else -> 0
+                                },
+                                gender = userData["gender"] as? String,
+                                schoolLevel = userData["schoolLevel"] as? String ?: "",
+                                birthDate = userData["birthDate"] as? String ?: "",
+                                avatarUrl = userData["avatarUrl"] as? String ?: "",
+                                phoneNumber = userData["phoneNumber"] as? String ?: "",
+                                occupation = userData["occupation"] as? String ?: "",
+                                relationship = userData["relationship"] as? String ?: "",
+                                type = userData["type"] as? String ?: ""
+                            )
+
+                            trySend(Result.success(user))
+                        } else {
+                            trySend(Result.failure(Exception("Failed to parse user data")))
+                        }
+                    } catch (e: Exception) {
+                        trySend(Result.failure(e))
+                    }
+                } else {
+                    trySend(Result.failure(Exception("User not found")))
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                trySend(Result.failure(Exception(error.message)))
+            }
+        }
+
+        userRef.addValueEventListener(listener)
+
+        awaitClose {
+            userRef.removeEventListener(listener)
+        }
+    }
+
+    suspend fun updateUser(userId: String, userUpdates: Map<String, String?>): Result<Unit> {
+        return try {
+            val userRef = database.getReference("users").child(userId)
+            userRef.updateChildren(userUpdates as Map<String, Any?>)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
+
 
 // Settings Repository
 interface SettingsRepository {

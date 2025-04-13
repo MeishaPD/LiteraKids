@@ -50,13 +50,18 @@ fun ParentProfileScreen(
     viewModel: ParentProfileViewModel = hiltViewModel(),
     onBackClick: () -> Unit = {}
 ){
-
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
 
     LaunchedEffect(state.error) {
         state.error?.let {
             Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    LaunchedEffect(state.updateSuccess) {
+        if (state.updateSuccess) {
+            Toast.makeText(context, "Profil berhasil diperbarui!", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -247,7 +252,8 @@ fun ParentProfileScreen(
                     shape = RoundedCornerShape(20.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF5AD8FF)
-                    )
+                    ),
+                    enabled = !state.isLoading
                 ) {
                     Text(
                         text = "Perbarui Profil",
@@ -256,17 +262,6 @@ fun ParentProfileScreen(
                         color = Color.White
                     )
                 }
-            }
-        }
-
-        if (state.isLoading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color(0xFF5AD8FF)),
-                contentAlignment = Alignment.Center
-            ) {
-                // loading indicator
             }
         }
     }

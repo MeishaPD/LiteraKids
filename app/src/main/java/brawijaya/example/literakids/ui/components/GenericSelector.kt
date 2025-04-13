@@ -47,6 +47,7 @@ fun GenericSelector(
         enabled = false,
         colors = OutlinedTextFieldDefaults.colors(
             disabledBorderColor = Color.Black,
+            disabledTextColor = Color.Black
         )
     )
 

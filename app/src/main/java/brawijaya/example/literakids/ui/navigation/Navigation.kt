@@ -7,10 +7,10 @@ import androidx.navigation.compose.composable
 //import brawijaya.example.literakids.ui.screens.home.HomeScreen
 //import brawijaya.example.literakids.ui.screens.library.LibraryScreen
 //import brawijaya.example.literakids.ui.screens.community.CommunityScreen
-import brawijaya.example.literakids.ui.screens.profile.ProfileScreen
+//import brawijaya.example.literakids.ui.screens.profile.ProfileScreen
 import brawijaya.example.literakids.ui.screens.auth.LoginScreen
 import brawijaya.example.literakids.ui.screens.auth.RegisterScreen
-import brawijaya.example.literakids.ui.screens.avatar.AvatarSelectionScreen
+//import brawijaya.example.literakids.ui.screens.avatar.AvatarSelectionScreen
 
 //import brawijaya.example.literakids.ui.screens.auth.RegisterScreen
 //import brawijaya.example.literakids.ui.screens.profile.AccountInfoScreen
@@ -54,9 +54,9 @@ fun AppNavigation(navController: NavHostController) {
 //            CommunityScreen(navController = navController)
 //        }
 
-        composable(Screen.Profile.route) {
-            ProfileScreen(navController = navController)
-        }
+//        composable(Screen.Profile.route) {
+//            ProfileScreen(navController = navController)
+//        }
 
         composable(Screen.Login.route) {
             LoginScreen(navController = navController)
@@ -90,8 +90,8 @@ fun AppNavigation(navController: NavHostController) {
 //            AppUpdateScreen(navController = navController)
 //        }
 
-        composable(Screen.AvatarSelection.route) {
-            AvatarSelectionScreen(navController = navController)
-        }
+//        composable(Screen.AvatarSelection.route) {
+//            AvatarSelectionScreen(navController = navController)
+//        }
     }
 }
