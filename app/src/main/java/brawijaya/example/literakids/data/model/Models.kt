@@ -15,6 +15,9 @@ data class UserData(
     val birthDate: String = "",
     val avatarUrl: String = "",
     val coins: Int = 0,
+    val phoneNumber: String = "",
+    val occupation: String = "",
+    val relationship: String = "",
     val type: String = ""
 )
 

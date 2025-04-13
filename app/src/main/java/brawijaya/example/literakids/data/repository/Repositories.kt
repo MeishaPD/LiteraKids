@@ -61,7 +61,7 @@ class UserRepository @Inject constructor(
                                     currentXp = kidData.child("xp").getValue(Int::class.java) ?: 0,
                                     coins = kidData.child("koin").getValue(Int::class.java) ?: 0
                                     // parentName = parentData.child("namaLengkap").getValue(String::class.java) ?: "Adinda Febyola",
-                                   //  parentUsername = parentData.child("username").getValue(String::class.java) ?: "@febydinda",
+                                    //  parentUsername = parentData.child("username").getValue(String::class.java) ?: "@febydinda",
                                     // parentAvatarId = parentData.child("avatar").getValue(Int::class.java) ?: 7,
                                     // avatarUrls = avatarUrls
                                 )
@@ -112,8 +112,6 @@ class UserRepository @Inject constructor(
         }
     }
 
-    // CHILD PROFILE ACTIVITY
-
     fun getUserById(userId: String): Flow<Result<UserData>> = callbackFlow {
         val userRef = database.getReference("users").child(userId)
 
@@ -131,7 +129,7 @@ class UserRepository @Inject constructor(
                                 fullName = userData["fullName"] as? String ?: "",
                                 username = userData["username"] as? String ?: "",
                                 level = (userData["level"] as? Long)?.toInt() ?: 1,
-                                currentXp = (userData["currentXp"] as? Long)?.toInt() ?: 80,
+                                currentXp = (userData["currentXp"] as? Long)?.toInt() ?: 0,
                                 maxXp = (userData["maxXp"] as? Long)?.toInt() ?: 100,
                                 age = when (val age = userData["age"]) {
                                     is Long -> age.toInt()
@@ -144,6 +142,9 @@ class UserRepository @Inject constructor(
                                 schoolLevel = userData["schoolLevel"] as? String ?: "",
                                 birthDate = userData["birthDate"] as? String ?: "",
                                 avatarUrl = userData["avatarUrl"] as? String ?: "",
+                                phoneNumber = userData["phoneNumber"] as? String ?: "",
+                                occupation = userData["occupation"] as? String ?: "",
+                                relationship = userData["relationship"] as? String ?: "",
                                 type = userData["type"] as? String ?: ""
                             )
 
@@ -174,13 +175,14 @@ class UserRepository @Inject constructor(
     suspend fun updateUser(userId: String, userUpdates: Map<String, String?>): Result<Unit> {
         return try {
             val userRef = database.getReference("users").child(userId)
-            userRef.updateChildren(userUpdates)
+            userRef.updateChildren(userUpdates as Map<String, Any?>)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 }
+
 
 // Settings Repository
 interface SettingsRepository {
