@@ -44,6 +44,7 @@ fun DatePicker(
         enabled = false,
         colors = OutlinedTextFieldDefaults.colors(
             disabledBorderColor = Color.Black,
+            disabledTextColor = Color.Black
         )
     )
 }

@@ -3,16 +3,19 @@ package brawijaya.example.literakids.data.model
 import java.util.Date
 
 data class UserData(
-    val kidName: String = "",
-    val kidUsername: String = "",
-    val kidAvatarId: Int = 1,
-    val kidLevel: Int = 1,
-    val kidXp: Int = 0,
-    val kidCoins: Int = 0,
-    val parentName: String = "",
-    val parentUsername: String = "",
-    val parentAvatarId: Int = 7,
-    val avatarUrls: List<String> = emptyList()
+    val id: String = "",
+    val fullName: String = "",
+    val username: String = "",
+    val level: Int = 1,
+    val currentXp: Int = 0,
+    val maxXp: Int = 100,
+    val age: Int = 0,
+    val gender: String? = null,
+    val schoolLevel: String = "",
+    val birthDate: String = "",
+    val avatarUrl: String = "",
+    val coins: Int = 0,
+    val type: String = ""
 )
 
 data class UserSettings(
