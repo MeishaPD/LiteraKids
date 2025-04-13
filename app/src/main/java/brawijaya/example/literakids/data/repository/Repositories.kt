@@ -19,12 +19,10 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.coroutines.resumeWithException
 
 @Singleton
 class UserRepository @Inject constructor(
@@ -44,6 +42,42 @@ class UserRepository @Inject constructor(
 
                         Log.d("TAG", userData.toString())
                         if (userData != null) {
+                            val ownedAvatarsList = mutableListOf<String>()
+
+                            when (val ownedAvatarsData = userData["ownedAvatars"]) {
+                                is List<*> -> {
+                                    ownedAvatarsData.forEach { item ->
+                                        if (item is String) {
+                                            ownedAvatarsList.add(item)
+                                        }
+                                    }
+                                }
+                                is ArrayList<*> -> {
+                                    ownedAvatarsData.forEach { item ->
+                                        if (item is String) {
+                                            ownedAvatarsList.add(item)
+                                        }
+                                    }
+                                }
+                                is HashMap<*, *> -> {
+                                    ownedAvatarsData.values.forEach { item ->
+                                        if (item is String) {
+                                            ownedAvatarsList.add(item)
+                                        }
+                                    }
+                                }
+                            }
+
+                            val avatarUrl = userData["avatarUrl"] as? String ?: ""
+                            if (avatarUrl.isNotEmpty() && !ownedAvatarsList.contains(avatarUrl)) {
+                                ownedAvatarsList.add(avatarUrl)
+                            }
+
+                            if (ownedAvatarsList.isEmpty()) {
+                                val defaultAvatarUrl = "https://firebasestorage.googleapis.com/v0/b/fitly-test-app.appspot.com/o/avatars%2F1.png?alt=media&token=cfcb0d86-5030-4f31-878d-d2887f37e788"
+                                ownedAvatarsList.add(defaultAvatarUrl)
+                            }
+
                             val user = UserData(
                                 id = userId,
                                 fullName = userData["fullName"] as? String ?: "",
@@ -61,12 +95,13 @@ class UserRepository @Inject constructor(
                                 gender = userData["gender"] as? String,
                                 schoolLevel = userData["schoolLevel"] as? String ?: "",
                                 birthDate = userData["birthDate"] as? String ?: "",
-                                avatarUrl = userData["avatarUrl"] as? String ?: "",
+                                avatarUrl = avatarUrl,
                                 phoneNumber = userData["phoneNumber"] as? String ?: "",
                                 occupation = userData["occupation"] as? String ?: "",
                                 relationship = userData["relationship"] as? String ?: "",
                                 coins = (userData["coin"] as? Long)?.toInt() ?: 0,
-                                type = userData["type"] as? String ?: ""
+                                type = userData["type"] as? String ?: "",
+                                ownedAvatars = ownedAvatarsList  // Add owned avatars to user data
                             )
 
                             trySend(Result.success(user))
@@ -106,7 +141,7 @@ class UserRepository @Inject constructor(
         }
     }
 
-    fun updateUser(userId: String, userUpdates: Map<String, String?>): Result<Unit> {
+    fun updateUser(userId: String, userUpdates: Map<String, Any>): Result<Unit> {
         return try {
             val userRef = database.getReference("users").child(userId)
             userRef.updateChildren(userUpdates as Map<String, Any?>)

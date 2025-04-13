@@ -16,6 +16,7 @@ data class UserData(
     val phoneNumber: String = "",
     val occupation: String = "",
     val relationship: String = "",
+    val ownedAvatars: List<String> = emptyList(),
     val type: String = ""
 )
 

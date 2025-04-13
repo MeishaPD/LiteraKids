@@ -49,6 +49,8 @@ import brawijaya.example.literakids.R
 import brawijaya.example.literakids.ui.components.DatePicker
 import brawijaya.example.literakids.ui.navigation.Screen
 import brawijaya.example.literakids.ui.screens.childProfile.components.SchoolLevelSelector
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -133,8 +135,11 @@ fun ChildProfileScreen(
                             .border(2.dp, Color(0xFFDE99FF), CircleShape)
                             .background(Color.White)
                     ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.wizard_avatar),
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(state.avatarUrl)
+                                .crossfade(true)
+                                .build(),
                             contentDescription = "Avatar",
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop

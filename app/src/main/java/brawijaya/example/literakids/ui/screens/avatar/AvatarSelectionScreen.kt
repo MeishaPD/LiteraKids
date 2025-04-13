@@ -1,5 +1,6 @@
 package brawijaya.example.literakids.ui.screens.avatar
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -21,11 +22,16 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import brawijaya.example.literakids.R
+import brawijaya.example.literakids.ui.screens.avatar.components.ErrorDialog
+import brawijaya.example.literakids.ui.screens.avatar.components.PurchaseDialog
+import brawijaya.example.literakids.ui.screens.avatar.components.SuccessDialog
 import brawijaya.example.literakids.ui.screens.childProfile.ChildProfileViewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -54,12 +60,25 @@ fun AvatarSelectionScreen(
     )
 
     var selectedAvatar by remember(uiState.avatarUrl) { mutableStateOf(uiState.avatarUrl) }
+
+    var showOnlyOwned by remember { mutableStateOf(false) }
+
+    var showPurchaseDialog by remember { mutableStateOf(false) }
+    var selectedAvatarForPurchase by remember { mutableStateOf<AvatarOption?>(null) }
+
+    val findAvatarByUrl: (String) -> AvatarOption? = { url ->
+        avatarOptions.find { it.imageUrl == url }
+    }
+
+    val currentActionAvatar = selectedAvatarForPurchase ?:
+    findAvatarByUrl(uiState.avatarUrl ?: "") ?:
+    avatarOptions.first()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // Gradient header
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -97,7 +116,6 @@ fun AvatarSelectionScreen(
             )
         }
 
-        // Selected avatar preview
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -106,7 +124,7 @@ fun AvatarSelectionScreen(
         ) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(avatarOptions.find { it.imageUrl == selectedAvatar }?.imageUrl)
+                    .data(selectedAvatar)
                     .crossfade(true)
                     .build(),
                 contentDescription = "Selected Avatar",
@@ -118,7 +136,6 @@ fun AvatarSelectionScreen(
             )
         }
 
-        // Coins display
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -141,10 +158,9 @@ fun AvatarSelectionScreen(
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
+                    Image(
+                        painter = painterResource(id = R.drawable.coin),
                         contentDescription = "Coin",
-                        tint = Color(0xFFFFD700),
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -157,7 +173,6 @@ fun AvatarSelectionScreen(
             }
         }
 
-        // Avatar selection title
         Text(
             text = "Pilihan Karakter",
             fontWeight = FontWeight.Bold,
@@ -166,7 +181,12 @@ fun AvatarSelectionScreen(
             modifier = Modifier.padding(start = 16.dp, top = 24.dp, bottom = 8.dp)
         )
 
-        // Avatar grid
+        val displayedAvatars = if (showOnlyOwned) {
+            avatarOptions.filter { avatar -> avatar.imageUrl in uiState.ownedAvatars }
+        } else {
+            avatarOptions
+        }
+
         LazyVerticalGrid(
             columns = GridCells.Fixed(3),
             contentPadding = PaddingValues(16.dp),
@@ -174,9 +194,10 @@ fun AvatarSelectionScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            items(avatarOptions) { avatar ->
+            items(displayedAvatars) { avatar ->
                 val isSelected = selectedAvatar == avatar.imageUrl
-                val isOwned = (avatar.id == 1) || (avatar.price <= uiState.coins)
+
+                val isOwned = avatar.imageUrl in uiState.ownedAvatars
 
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -188,13 +209,22 @@ fun AvatarSelectionScreen(
                             color = if (isSelected) Color(0xFF5DCCF8) else Color.LightGray,
                             shape = RoundedCornerShape(16.dp)
                         )
-                        .clickable(enabled = isOwned) {
-                            selectedAvatar = avatar.imageUrl
-                            viewModel.updateAvatar(avatar.imageUrl)
+                        .clickable {
+                            if (isOwned) {
+                                selectedAvatar = avatar.imageUrl
+                                viewModel.updateAvatar(avatar.imageUrl)
+                            } else {
+                                selectedAvatarForPurchase = avatar
+                                showPurchaseDialog = true
+                            }
                         }
                         .padding(8.dp)
+                        .height(140.dp)
                 ) {
-                    Box(contentAlignment = Alignment.TopEnd) {
+                    Box(
+                        contentAlignment = Alignment.TopEnd,
+                        modifier = Modifier.weight(1f)
+                    ) {
                         AsyncImage(
                             model = ImageRequest.Builder(LocalContext.current)
                                 .data(avatar.imageUrl)
@@ -205,6 +235,7 @@ fun AvatarSelectionScreen(
                             modifier = Modifier
                                 .size(60.dp)
                                 .clip(CircleShape)
+                                .align(Alignment.Center)
                         )
 
                         if (isSelected) {
@@ -223,6 +254,22 @@ fun AvatarSelectionScreen(
                                     modifier = Modifier.size(16.dp)
                                 )
                             }
+                        } else if (isOwned) {
+                            Box(
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFF43A047))
+                                    .padding(4.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = "Owned",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
                         }
                     }
 
@@ -232,26 +279,28 @@ fun AvatarSelectionScreen(
                         text = avatar.name,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
-                        color = Color(0xFF1D7193)
+                        color = Color(0xFF1D7193),
+                        maxLines = 1,
                     )
 
                     Spacer(modifier = Modifier.height(4.dp))
 
-                    if (avatar.price > 0) {
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color(0xFFFFECC7))
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                        ) {
+                    Box(
+                        modifier = Modifier
+                            .height(32.dp)
+                            .fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (avatar.price > 0 && !isOwned) {
                             Row(
-                                verticalAlignment = Alignment.CenterVertically
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.clip(RoundedCornerShape(12.dp))
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Check,
+                                Image(
+                                    painter = painterResource(id = R.drawable.coin),
                                     contentDescription = "Coin",
-                                    tint = Color(0xFFFFD700),
-                                    modifier = Modifier.size(16.dp)
+                                    modifier = Modifier.size(24.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
@@ -260,6 +309,8 @@ fun AvatarSelectionScreen(
                                     color = Color(0xFF1D7193)
                                 )
                             }
+                        } else {
+                            Spacer(modifier = Modifier.height(1.dp))
                         }
                     }
                 }
@@ -267,7 +318,44 @@ fun AvatarSelectionScreen(
         }
     }
 
-    // Loading indicator
+    if (showPurchaseDialog && selectedAvatarForPurchase != null) {
+        PurchaseDialog(
+            avatarOption = selectedAvatarForPurchase!!,
+            onDismiss = {
+                showPurchaseDialog = false
+            },
+            onConfirmPurchase = {
+                viewModel.purchaseAvatar(
+                    selectedAvatarForPurchase!!.imageUrl,
+                    selectedAvatarForPurchase!!.price
+                )
+
+                showPurchaseDialog = false
+            }
+        )
+    }
+
+    if (uiState.purchaseSuccess) {
+        SuccessDialog(
+            showDialog = true,
+            avatarOption = currentActionAvatar,
+            message = "Avatar berhasil dibeli!",
+            onDismiss = {
+                viewModel.resetPurchaseStatus()
+                selectedAvatar = currentActionAvatar.imageUrl
+            }
+        )
+    }
+
+    if (uiState.purchaseError != null) {
+        ErrorDialog(
+            showDialog = true,
+            avatarOption = currentActionAvatar,
+            message = uiState.purchaseError ?: "Gagal membeli avatar. Silakan coba lagi.",
+            onDismiss = { viewModel.resetPurchaseStatus() }
+        )
+    }
+
     if (uiState.isLoading) {
         Box(
             modifier = Modifier

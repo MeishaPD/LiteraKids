@@ -24,8 +24,11 @@ data class ChildProfileState(
     val birthDate: String = "",
     val isLoading: Boolean = false,
     val avatarUrl: String = "",
+    val ownedAvatars: List<String> = emptyList(),
     val error: String? = null,
-    val updateSuccess: Boolean = false
+    val updateSuccess: Boolean = false,
+    val purchaseSuccess: Boolean = false,
+    val purchaseError: String? = null
 )
 
 @HiltViewModel
@@ -38,12 +41,9 @@ class ChildProfileViewModel @Inject constructor(
 
     private var userId: String = "user11"
 
-    init {
-        loadUserProfile()
-    }
+    private val defaultAvatarUrl = "https://firebasestorage.googleapis.com/v0/b/fitly-test-app.appspot.com/o/avatars%2F1.png?alt=media&token=cfcb0d86-5030-4f31-878d-d2887f37e788"
 
-    fun setUserId(id: String) {
-        userId = id
+    init {
         loadUserProfile()
     }
 
@@ -54,6 +54,16 @@ class ChildProfileViewModel @Inject constructor(
             userRepository.getUserById(userId).collect { result ->
                 result.fold(
                     onSuccess = { user ->
+                        val ownedAvatarsList = if (user.ownedAvatars.isNotEmpty()) {
+                            user.ownedAvatars.toMutableList()
+                        } else {
+                            mutableListOf(defaultAvatarUrl)
+                        }
+
+                        if (user.avatarUrl.isNotEmpty() && user.avatarUrl != defaultAvatarUrl && !ownedAvatarsList.contains(user.avatarUrl)) {
+                            ownedAvatarsList.add(user.avatarUrl)
+                        }
+
                         _state.update {
                             it.copy(
                                 isLoading = false,
@@ -68,6 +78,7 @@ class ChildProfileViewModel @Inject constructor(
                                 schoolLevel = user.schoolLevel,
                                 birthDate = user.birthDate,
                                 avatarUrl = user.avatarUrl,
+                                ownedAvatars = ownedAvatarsList,
                                 error = null
                             )
                         }
@@ -76,6 +87,7 @@ class ChildProfileViewModel @Inject constructor(
                         _state.update {
                             it.copy(
                                 isLoading = false,
+                                ownedAvatars = listOf(defaultAvatarUrl),
                                 error = e.message ?: "Failed to load user profile"
                             )
                         }
@@ -86,8 +98,95 @@ class ChildProfileViewModel @Inject constructor(
     }
 
     fun updateAvatar(avatarUrl: String) {
-        _state.update { it.copy(avatarUrl = avatarUrl) }
+        if (avatarUrl in _state.value.ownedAvatars) {
+            _state.update { it.copy(avatarUrl = avatarUrl) }
+        }
     }
+
+    fun purchaseAvatar(avatarUrl: String, price: Int) {
+        viewModelScope.launch {
+            _state.update {
+                it.copy(
+                    isLoading = true,
+                    purchaseSuccess = false,
+                    purchaseError = null
+                )
+            }
+
+            try {
+                if (_state.value.coins < price) {
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            purchaseError = "Koin tidak cukup untuk membeli avatar ini"
+                        )
+                    }
+                    return@launch
+                }
+
+                if (avatarUrl in _state.value.ownedAvatars) {
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            purchaseError = "Avatar ini sudah dimiliki"
+                        )
+                    }
+                    return@launch
+                }
+
+                val updatedOwnedAvatars = _state.value.ownedAvatars.toMutableList()
+                updatedOwnedAvatars.add(avatarUrl)
+
+                val updates = mapOf(
+                    "avatarUrl" to avatarUrl,
+                    "coin" to (_state.value.coins - price),
+                    "ownedAvatars" to updatedOwnedAvatars
+                )
+
+                println("Updated owned avatars pepk: $updates")
+
+
+                val result = userRepository.updateUser(userId, updates)
+
+                result.fold(
+                    onSuccess = {
+                        _state.update { currentState ->
+                            currentState.copy(
+                                isLoading = false,
+                                avatarUrl = avatarUrl,
+                                coins = currentState.coins - price,
+                                ownedAvatars = updatedOwnedAvatars,
+                                purchaseSuccess = true
+                            )
+                        }
+
+                        println("Updated owned avatars state: ${_state.value.ownedAvatars}")
+
+                        viewModelScope.launch {
+                            kotlinx.coroutines.delay(3000)
+                            _state.update { it.copy(purchaseSuccess = false) }
+                        }
+                    },
+                    onFailure = { e ->
+                        _state.update {
+                            it.copy(
+                                isLoading = false,
+                                purchaseError = e.message ?: "Gagal membeli avatar"
+                            )
+                        }
+                    }
+                )
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        purchaseError = e.message ?: "Terjadi kesalahan saat membeli avatar"
+                    )
+                }
+            }
+        }
+    }
+
 
     fun updateFullName(name: String) {
         _state.update { it.copy(fullName = name) }
@@ -102,7 +201,6 @@ class ChildProfileViewModel @Inject constructor(
         }
     }
 
-
     fun updateGender(gender: String) {
         _state.update { it.copy(gender = gender) }
     }
@@ -115,15 +213,24 @@ class ChildProfileViewModel @Inject constructor(
         _state.update { it.copy(birthDate = date) }
     }
 
+    fun resetPurchaseStatus() {
+        _state.update {
+            it.copy(
+                purchaseSuccess = false,
+                purchaseError = null
+            )
+        }
+    }
+
     fun saveProfile() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, updateSuccess = false, error = null) }
 
             try {
-                val updates = mapOf(
+                val updates: Map<String, Any> = mapOf(
                     "fullName" to state.value.fullName,
-                    "age" to state.value.age.toString(),
-                    "gender" to state.value.gender,
+                    "age" to state.value.age,
+                    "gender" to (state.value.gender ?: ""),
                     "schoolLevel" to state.value.schoolLevel,
                     "birthDate" to state.value.birthDate
                 )
