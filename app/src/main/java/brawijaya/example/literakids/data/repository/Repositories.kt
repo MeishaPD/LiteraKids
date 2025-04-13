@@ -32,86 +32,6 @@ class UserRepository @Inject constructor(
     private val database: FirebaseDatabase
 ) {
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    suspend fun getUserData(): UserData = withContext(Dispatchers.IO) {
-        val userId = auth.currentUser?.uid ?: "dummyUser"
-
-        return@withContext suspendCancellableCoroutine { continuation ->
-            // First, get the avatar URLs
-            database.reference.child("images").addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(imagesSnapshot: DataSnapshot) {
-                    val avatarUrls = mutableListOf<String>()
-
-                    // Convert the images data to a list
-                    imagesSnapshot.children.forEach { childSnapshot ->
-                        childSnapshot.getValue(String::class.java)?.let { avatarUrls.add(it) }
-                    }
-
-                    // Now get the user data
-                    database.reference.child(userId).addListenerForSingleValueEvent(object : ValueEventListener {
-                        override fun onDataChange(userSnapshot: DataSnapshot) {
-                            if (userSnapshot.exists()) {
-                                val kidData = userSnapshot.child("akunAnak")
-                                val parentData = userSnapshot.child("akunPendamping")
-
-                                val userData = UserData(
-                                    fullName = kidData.child("namaLengkap").getValue(String::class.java) ?: "Levi Annora",
-                                    username = kidData.child("username").getValue(String::class.java) ?: "@leviannora",
-                                    avatarUrl = kidData.child("avatar").getValue(String::class.java) ?: "11",
-                                    level = kidData.child("level").getValue(Int::class.java) ?: 1,
-                                    currentXp = kidData.child("xp").getValue(Int::class.java) ?: 0,
-                                    coins = kidData.child("koin").getValue(Int::class.java) ?: 0
-                                    // parentName = parentData.child("namaLengkap").getValue(String::class.java) ?: "Adinda Febyola",
-                                    //  parentUsername = parentData.child("username").getValue(String::class.java) ?: "@febydinda",
-                                    // parentAvatarId = parentData.child("avatar").getValue(Int::class.java) ?: 7,
-                                    // avatarUrls = avatarUrls
-                                )
-
-                                continuation.resume(userData, onCancellation = null)
-                            } else {
-                                // If no data exists, create dummy data that matches the screenshot
-                                val userData = UserData(
-                                    fullName = "Levi Annora",
-                                    username = "@leviannora",
-                                    avatarUrl = "1",
-                                    level = 7,
-                                    currentXp = 90,
-                                    coins = 420,
-//                                    parentName = "Adinda Febyola",
-//                                    parentUsername = "@febydinda",
-//                                    parentAvatarId = 7,
-//                                    avatarUrls = avatarUrls
-                                )
-
-                                continuation.resume(userData, onCancellation = null)
-                            }
-                        }
-
-                        override fun onCancelled(error: DatabaseError) {
-                            continuation.resumeWithException(error.toException())
-                        }
-                    })
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                    continuation.resumeWithException(error.toException())
-                }
-            })
-        }
-    }
-
-    suspend fun updateKidAvatar(avatarId: Int): Boolean = withContext(Dispatchers.IO) {
-        val userId = auth.currentUser?.uid ?: "dummyUser"
-
-        try {
-            database.reference.child(userId).child("akunAnak").child("avatar")
-                .setValue(avatarId).await()
-            return@withContext true
-        } catch (e: Exception) {
-            Log.e("UserRepository", "Error updating avatar", e)
-            return@withContext false
-        }
-    }
-
     fun getUserById(userId: String): Flow<Result<UserData>> = callbackFlow {
         val userRef = database.getReference("users").child(userId)
 
@@ -145,6 +65,7 @@ class UserRepository @Inject constructor(
                                 phoneNumber = userData["phoneNumber"] as? String ?: "",
                                 occupation = userData["occupation"] as? String ?: "",
                                 relationship = userData["relationship"] as? String ?: "",
+                                coins = (userData["coin"] as? Long)?.toInt() ?: 0,
                                 type = userData["type"] as? String ?: ""
                             )
 
@@ -172,7 +93,20 @@ class UserRepository @Inject constructor(
         }
     }
 
-    suspend fun updateUser(userId: String, userUpdates: Map<String, String?>): Result<Unit> {
+    suspend fun updateKidAvatar(avatarUrl: String): Boolean = withContext(Dispatchers.IO) {
+        val userId = auth.currentUser?.uid ?: "user11"
+
+        try {
+            database.reference.child("users").child(userId).child("avatarUrl")
+                .setValue(avatarUrl).await()
+            return@withContext true
+        } catch (e: Exception) {
+            Log.e("UserRepository", "Error updating avatar", e)
+            return@withContext false
+        }
+    }
+
+    fun updateUser(userId: String, userUpdates: Map<String, String?>): Result<Unit> {
         return try {
             val userRef = database.getReference("users").child(userId)
             userRef.updateChildren(userUpdates as Map<String, Any?>)

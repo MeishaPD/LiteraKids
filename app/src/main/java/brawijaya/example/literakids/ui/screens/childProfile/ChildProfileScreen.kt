@@ -44,15 +44,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import brawijaya.example.literakids.R
 import brawijaya.example.literakids.ui.components.DatePicker
+import brawijaya.example.literakids.ui.navigation.Screen
 import brawijaya.example.literakids.ui.screens.childProfile.components.SchoolLevelSelector
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChildProfileScreen(
     viewModel: ChildProfileViewModel = hiltViewModel(),
-    onBackClick: () -> Unit = {}
+    navController: NavController,
+    onBackClick: () -> Unit = { navController.popBackStack() },
 ) {
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
@@ -146,12 +149,16 @@ fun ChildProfileScreen(
                             .align(Alignment.BottomEnd),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_edit),
-                            contentDescription = "Edit",
-                            tint = Color.White,
-                            modifier = Modifier.size(16.dp)
-                        )
+                        IconButton(
+                            modifier = Modifier.size(16.dp),
+                            onClick = { navController.navigate(Screen.AvatarSelection.route) }
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_edit),
+                                tint = Color.White,
+                                contentDescription = "Edit",
+                            )
+                        }
                     }
                 }
 

@@ -18,6 +18,7 @@ data class ChildProfileState(
     val currentXp: Int = 0,
     val maxXp: Int = 100,
     val age: Int = 0,
+    val coins: Int = 0,
     val gender: String? = null,
     val schoolLevel: String = "",
     val birthDate: String = "",
@@ -62,6 +63,7 @@ class ChildProfileViewModel @Inject constructor(
                                 currentXp = user.currentXp,
                                 maxXp = user.maxXp,
                                 age = user.age,
+                                coins = user.coins,
                                 gender = user.gender,
                                 schoolLevel = user.schoolLevel,
                                 birthDate = user.birthDate,
@@ -81,6 +83,10 @@ class ChildProfileViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    fun updateAvatar(avatarUrl: String) {
+        _state.update { it.copy(avatarUrl = avatarUrl) }
     }
 
     fun updateFullName(name: String) {

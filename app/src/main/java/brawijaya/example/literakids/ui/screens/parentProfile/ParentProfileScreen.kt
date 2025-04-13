@@ -39,6 +39,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import brawijaya.example.literakids.R
 import brawijaya.example.literakids.ui.components.DatePicker
 import brawijaya.example.literakids.ui.screens.parentProfile.components.OccupationSelector
@@ -48,7 +50,8 @@ import brawijaya.example.literakids.ui.screens.parentProfile.components.Relation
 @Composable
 fun ParentProfileScreen(
     viewModel: ParentProfileViewModel = hiltViewModel(),
-    onBackClick: () -> Unit = {}
+    navController: NavController,
+    onBackClick: () -> Unit = { navController.popBackStack() },
 ){
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current

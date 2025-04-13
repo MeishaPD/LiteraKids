@@ -7,12 +7,12 @@ import androidx.navigation.compose.composable
 //import brawijaya.example.literakids.ui.screens.home.HomeScreen
 //import brawijaya.example.literakids.ui.screens.library.LibraryScreen
 //import brawijaya.example.literakids.ui.screens.community.CommunityScreen
-//import brawijaya.example.literakids.ui.screens.profile.ProfileScreen
+import brawijaya.example.literakids.ui.screens.profile.ProfileScreen
 import brawijaya.example.literakids.ui.screens.auth.LoginScreen
 import brawijaya.example.literakids.ui.screens.auth.RegisterScreen
-//import brawijaya.example.literakids.ui.screens.avatar.AvatarSelectionScreen
-
-//import brawijaya.example.literakids.ui.screens.auth.RegisterScreen
+import brawijaya.example.literakids.ui.screens.avatar.AvatarSelectionScreen
+import brawijaya.example.literakids.ui.screens.childProfile.ChildProfileScreen
+import brawijaya.example.literakids.ui.screens.parentProfile.ParentProfileScreen
 //import brawijaya.example.literakids.ui.screens.profile.AccountInfoScreen
 //import brawijaya.example.literakids.ui.screens.profile.NotificationsScreen
 //import brawijaya.example.literakids.ui.screens.profile.PrivacyPolicyScreen
@@ -33,6 +33,8 @@ sealed class Screen(val route: String) {
     object TermsOfService : Screen("terms_of_service")
     object Security : Screen("security")
     object AppUpdate : Screen("app_update")
+    object ParentProfile : Screen("parent_profile")
+    object ChildProfile : Screen("child_profile")
     object AvatarSelection : Screen("avatar_selection")
 }
 
@@ -54,9 +56,9 @@ fun AppNavigation(navController: NavHostController) {
 //            CommunityScreen(navController = navController)
 //        }
 
-//        composable(Screen.Profile.route) {
-//            ProfileScreen(navController = navController)
-//        }
+        composable(Screen.Profile.route) {
+            ProfileScreen(navController = navController)
+        }
 
         composable(Screen.Login.route) {
             LoginScreen(navController = navController)
@@ -90,8 +92,16 @@ fun AppNavigation(navController: NavHostController) {
 //            AppUpdateScreen(navController = navController)
 //        }
 
-//        composable(Screen.AvatarSelection.route) {
-//            AvatarSelectionScreen(navController = navController)
-//        }
+        composable(Screen.ChildProfile.route) {
+            ChildProfileScreen(navController = navController)
+        }
+
+        composable(Screen.ParentProfile.route) {
+            ParentProfileScreen(navController = navController)
+        }
+
+        composable(Screen.AvatarSelection.route) {
+            AvatarSelectionScreen(navController = navController)
+        }
     }
 }
