@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
@@ -46,7 +46,6 @@ fun RegisterScreen(
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // Gradient header
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -66,7 +65,7 @@ fun RegisterScreen(
                 modifier = Modifier.padding(8.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Default.ArrowBack,
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Kembali",
                     tint = Color.White
                 )
@@ -83,14 +82,12 @@ fun RegisterScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Register Form
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Name field
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
@@ -113,7 +110,6 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Email field
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
@@ -137,7 +133,6 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Password field
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
@@ -171,7 +166,6 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Confirm Password field
             OutlinedTextField(
                 value = confirmPassword,
                 onValueChange = { confirmPassword = it },
@@ -214,7 +208,6 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Register button
             Button(
                 onClick = {
                     if (password != confirmPassword) {
@@ -242,7 +235,6 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Login option
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
@@ -270,7 +262,6 @@ fun RegisterScreen(
         }
     }
 
-    // Error dialog
     if (uiState.error.isNotEmpty()) {
         AlertDialog(
             onDismissRequest = { viewModel.clearError() },
@@ -286,7 +277,6 @@ fun RegisterScreen(
         )
     }
 
-    // Loading indicator
     if (uiState.isLoading) {
         Box(
             modifier = Modifier
@@ -300,7 +290,6 @@ fun RegisterScreen(
         }
     }
 
-    // Success navigation
     LaunchedEffect(uiState.isLoggedIn) {
         if (uiState.isLoggedIn) {
             navController.navigate(Screen.Login.route) {

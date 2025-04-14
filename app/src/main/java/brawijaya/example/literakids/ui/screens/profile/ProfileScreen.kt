@@ -12,9 +12,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.Image
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -30,7 +30,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.painterResource
@@ -40,7 +39,6 @@ import brawijaya.example.literakids.R
 import brawijaya.example.literakids.ui.navigation.Screen
 import brawijaya.example.literakids.ui.screens.childProfile.ChildProfileViewModel
 import brawijaya.example.literakids.ui.screens.parentProfile.ParentProfileViewModel
-import brawijaya.example.literakids.ui.theme.LiteraKidsTheme
 import coil.compose.AsyncImage
 
 @Composable
@@ -147,6 +145,7 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            @Suppress("DEPRECATION")
             OutlinedButton(
                 onClick = {
                     navController.navigate(Screen.Login.route)
@@ -303,7 +302,7 @@ fun ProfileScreen(
             ProfileMenuItem(
                 icon = {
                     Icon(
-                        imageVector = Icons.Default.Logout,
+                        imageVector = Icons.AutoMirrored.Filled.Logout,
                         contentDescription = "Keluar",
                         tint = Color(0xFF5DCCF8),
                         modifier = Modifier.size(24.dp)

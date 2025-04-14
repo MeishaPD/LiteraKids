@@ -143,9 +143,6 @@ class ChildProfileViewModel @Inject constructor(
                     "ownedAvatars" to updatedOwnedAvatars
                 )
 
-                println("Updated owned avatars pepk: $updates")
-
-
                 val result = userRepository.updateUser(userId, updates)
 
                 result.fold(
@@ -159,8 +156,6 @@ class ChildProfileViewModel @Inject constructor(
                                 purchaseSuccess = true
                             )
                         }
-
-                        println("Updated owned avatars state: ${_state.value.ownedAvatars}")
 
                         viewModelScope.launch {
                             kotlinx.coroutines.delay(3000)

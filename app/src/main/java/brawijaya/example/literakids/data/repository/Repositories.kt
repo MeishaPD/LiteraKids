@@ -1,6 +1,5 @@
 package brawijaya.example.literakids.data.repository
 
-import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -8,143 +7,99 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import brawijaya.example.literakids.data.model.UserData
 import brawijaya.example.literakids.data.model.UserSettings
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.GenericTypeIndicator
-import com.google.firebase.database.ValueEventListener
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class UserRepository @Inject constructor(
-    private val auth: FirebaseAuth,
-    private val database: FirebaseDatabase
-) {
-    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    fun getUserById(userId: String): Flow<Result<UserData>> = callbackFlow {
-        val userRef = database.getReference("users").child(userId)
+class UserRepository @Inject constructor() {
+    private val users = mutableMapOf<String, UserData>()
+    private val userFlows = mutableMapOf<String, MutableStateFlow<Result<UserData>>>()
 
-        val listener = object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                if (snapshot.exists()) {
-                    try {
-                        val typeIndicator = object : GenericTypeIndicator<HashMap<String, Any>>() {}
-                        val userData = snapshot.getValue(typeIndicator)
+    init {
+        val mockUsers = listOf(
+            UserData(
+                id = "user11",
+                fullName = "Levi Annora",
+                username = "leviannora",
+                level = 7,
+                currentXp = 90,
+                maxXp = 100,
+                age = 5,
+                gender = "perempuan",
+                schoolLevel = "TK",
+                birthDate = "7/4/2025",
+                avatarUrl = "https://firebasestorage.googleapis.com/v0/b/fitly-test-app.appspot.com/o/avatars%2F1.png?alt=media&token=cfcb0d86-5030-4f31-878d-d2887f37e788",
+                coins = 450,
+                type = "child",
+                ownedAvatars = listOf(
+                    "https://firebasestorage.googleapis.com/v0/b/fitly-test-app.appspot.com/o/avatars%2F1.png?alt=media&token=cfcb0d86-5030-4f31-878d-d2887f37e788"
+                )
+            ),
+            UserData(
+                id = "user12",
+                fullName = "Adinda Febyola",
+                username = "febydinda",
+                level = 38,
+                birthDate = "1995-02-20",
+                avatarUrl = "https://firebasestorage.googleapis.com/v0/b/fitly-test-app.appspot.com/o/avatars%2F7.png?alt=media&token=7f31d3b4-55ec-46d5-b463-17e4c2da6929",
+                phoneNumber = "082198765432",
+                occupation = "Ibu Rumah Tangga",
+                relationship = "Ibu",
+                type = "parent",
+            )
+        )
 
-                        Log.d("TAG", userData.toString())
-                        if (userData != null) {
-                            val ownedAvatarsList = mutableListOf<String>()
-
-                            when (val ownedAvatarsData = userData["ownedAvatars"]) {
-                                is List<*> -> {
-                                    ownedAvatarsData.forEach { item ->
-                                        if (item is String) {
-                                            ownedAvatarsList.add(item)
-                                        }
-                                    }
-                                }
-                                is ArrayList<*> -> {
-                                    ownedAvatarsData.forEach { item ->
-                                        if (item is String) {
-                                            ownedAvatarsList.add(item)
-                                        }
-                                    }
-                                }
-                                is HashMap<*, *> -> {
-                                    ownedAvatarsData.values.forEach { item ->
-                                        if (item is String) {
-                                            ownedAvatarsList.add(item)
-                                        }
-                                    }
-                                }
-                            }
-
-                            val avatarUrl = userData["avatarUrl"] as? String ?: ""
-                            if (avatarUrl.isNotEmpty() && !ownedAvatarsList.contains(avatarUrl)) {
-                                ownedAvatarsList.add(avatarUrl)
-                            }
-
-                            if (ownedAvatarsList.isEmpty()) {
-                                val defaultAvatarUrl = "https://firebasestorage.googleapis.com/v0/b/fitly-test-app.appspot.com/o/avatars%2F1.png?alt=media&token=cfcb0d86-5030-4f31-878d-d2887f37e788"
-                                ownedAvatarsList.add(defaultAvatarUrl)
-                            }
-
-                            val user = UserData(
-                                id = userId,
-                                fullName = userData["fullName"] as? String ?: "",
-                                username = userData["username"] as? String ?: "",
-                                level = (userData["level"] as? Long)?.toInt() ?: 1,
-                                currentXp = (userData["currentXp"] as? Long)?.toInt() ?: 0,
-                                maxXp = (userData["maxXp"] as? Long)?.toInt() ?: 100,
-                                age = when (val age = userData["age"]) {
-                                    is Long -> age.toInt()
-                                    is Int -> age
-                                    is String -> age.toIntOrNull() ?: 0
-                                    is Double -> age.toInt()
-                                    else -> 0
-                                },
-                                gender = userData["gender"] as? String,
-                                schoolLevel = userData["schoolLevel"] as? String ?: "",
-                                birthDate = userData["birthDate"] as? String ?: "",
-                                avatarUrl = avatarUrl,
-                                phoneNumber = userData["phoneNumber"] as? String ?: "",
-                                occupation = userData["occupation"] as? String ?: "",
-                                relationship = userData["relationship"] as? String ?: "",
-                                coins = (userData["coin"] as? Long)?.toInt() ?: 0,
-                                type = userData["type"] as? String ?: "",
-                                ownedAvatars = ownedAvatarsList
-                            )
-
-                            trySend(Result.success(user))
-                        } else {
-                            trySend(Result.failure(Exception("Failed to parse user data")))
-                        }
-                    } catch (e: Exception) {
-                        trySend(Result.failure(e))
-                    }
-                } else {
-                    trySend(Result.failure(Exception("User not found")))
-                }
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                trySend(Result.failure(Exception(error.message)))
-            }
-        }
-
-        userRef.addValueEventListener(listener)
-
-        awaitClose {
-            userRef.removeEventListener(listener)
+        mockUsers.forEach { user ->
+            users[user.id] = user
+            userFlows[user.id] = MutableStateFlow(Result.success(user))
         }
     }
 
-    suspend fun updateKidAvatar(avatarUrl: String): Boolean = withContext(Dispatchers.IO) {
-        val userId = auth.currentUser?.uid ?: "user11"
-
-        try {
-            database.reference.child("users").child(userId).child("avatarUrl")
-                .setValue(avatarUrl).await()
-            return@withContext true
-        } catch (e: Exception) {
-            Log.e("UserRepository", "Error updating avatar", e)
-            return@withContext false
+    fun getUserById(userId: String): Flow<Result<UserData>> {
+        return userFlows[userId] ?: flow {
+            emit(Result.failure(Exception("User not found")))
         }
     }
 
     fun updateUser(userId: String, userUpdates: Map<String, Any>): Result<Unit> {
         return try {
-            val userRef = database.getReference("users").child(userId)
-            userRef.updateChildren(userUpdates as Map<String, Any?>)
+            val currentUser = users[userId] ?: throw Exception("User not found")
+
+            val updatedOwnedAvatars = when (val ownedAvatarsUpdate = userUpdates["ownedAvatars"]) {
+                is List<*> -> ownedAvatarsUpdate.filterIsInstance<String>()
+                else -> currentUser.ownedAvatars
+            }
+
+            val updatedUser = currentUser.copy(
+                fullName = (userUpdates["fullName"] as? String) ?: currentUser.fullName,
+                username = (userUpdates["username"] as? String) ?: currentUser.username,
+                level = (userUpdates["level"] as? Number)?.toInt() ?: currentUser.level,
+                currentXp = (userUpdates["currentXp"] as? Number)?.toInt() ?: currentUser.currentXp,
+                maxXp = (userUpdates["maxXp"] as? Number)?.toInt() ?: currentUser.maxXp,
+                age = when(val age = userUpdates["age"]) {
+                    is Number -> age.toInt()
+                    is String -> age.toIntOrNull() ?: currentUser.age
+                    else -> currentUser.age
+                },
+                gender = (userUpdates["gender"] as? String) ?: currentUser.gender,
+                schoolLevel = (userUpdates["schoolLevel"] as? String) ?: currentUser.schoolLevel,
+                birthDate = (userUpdates["birthDate"] as? String) ?: currentUser.birthDate,
+                avatarUrl = (userUpdates["avatarUrl"] as? String) ?: currentUser.avatarUrl,
+                coins = (userUpdates["coin"] as? Number)?.toInt() ?: currentUser.coins,
+                phoneNumber = (userUpdates["phoneNumber"] as? String) ?: currentUser.phoneNumber,
+                occupation = (userUpdates["occupation"] as? String) ?: currentUser.occupation,
+                relationship = (userUpdates["relationship"] as? String) ?: currentUser.relationship,
+                type = (userUpdates["type"] as? String) ?: currentUser.type,
+                ownedAvatars = updatedOwnedAvatars
+            )
+
+            users[userId] = updatedUser
+            userFlows[userId]?.value = Result.success(updatedUser)
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -152,12 +107,13 @@ class UserRepository @Inject constructor(
     }
 }
 
-
 // Settings Repository
 interface SettingsRepository {
     fun getUserSettings(): Flow<UserSettings>
     suspend fun updateDarkMode(isDarkMode: Boolean)
     suspend fun updateLanguage(language: String)
+    suspend fun updateNotificationsEnabled(enabled: Boolean)
+    suspend fun updateReadingReminders(enabled: Boolean)
 }
 
 class SettingsRepositoryImpl @Inject constructor(
@@ -167,13 +123,17 @@ class SettingsRepositoryImpl @Inject constructor(
     private object PreferencesKeys {
         val DARK_MODE = booleanPreferencesKey("dark_mode")
         val LANGUAGE = stringPreferencesKey("language")
+        val NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
+        val READING_REMINDERS = booleanPreferencesKey("reading_reminders")
     }
 
     override fun getUserSettings(): Flow<UserSettings> {
         return dataStore.data.map { preferences ->
             UserSettings(
                 isDarkMode = preferences[PreferencesKeys.DARK_MODE] ?: false,
-                language = preferences[PreferencesKeys.LANGUAGE] ?: "Indonesia"
+                language = preferences[PreferencesKeys.LANGUAGE] ?: "Indonesia",
+                notificationsEnabled = preferences[PreferencesKeys.NOTIFICATIONS_ENABLED] ?: true,
+                readingReminders = preferences[PreferencesKeys.READING_REMINDERS] ?: true
             )
         }
     }
@@ -187,6 +147,18 @@ class SettingsRepositoryImpl @Inject constructor(
     override suspend fun updateLanguage(language: String) {
         dataStore.edit { preferences ->
             preferences[PreferencesKeys.LANGUAGE] = language
+        }
+    }
+
+    override suspend fun updateNotificationsEnabled(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[PreferencesKeys.NOTIFICATIONS_ENABLED] = enabled
+        }
+    }
+
+    override suspend fun updateReadingReminders(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[PreferencesKeys.READING_REMINDERS] = enabled
         }
     }
 }
