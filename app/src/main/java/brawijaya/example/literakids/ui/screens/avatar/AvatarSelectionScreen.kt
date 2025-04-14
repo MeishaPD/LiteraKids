@@ -71,7 +71,7 @@ fun AvatarSelectionScreen(
     }
 
     val currentActionAvatar = selectedAvatarForPurchase ?:
-    findAvatarByUrl(uiState.avatarUrl ?: "") ?:
+    findAvatarByUrl(uiState.avatarUrl) ?:
     avatarOptions.first()
 
     Column(

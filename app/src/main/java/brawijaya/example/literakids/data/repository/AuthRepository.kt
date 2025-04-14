@@ -56,6 +56,6 @@ class AuthRepositoryImpl @Inject constructor() : AuthRepository {
     }
 
     override fun signOut() {
-         _isUserLoggedIn = false
+        _isUserLoggedIn = false
     }
 }

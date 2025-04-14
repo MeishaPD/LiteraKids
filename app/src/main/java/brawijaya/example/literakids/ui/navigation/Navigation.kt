@@ -18,6 +18,9 @@ sealed class Screen(val route: String) {
     object ParentProfile : Screen("parent_profile")
     object ChildProfile : Screen("child_profile")
     object AvatarSelection : Screen("avatar_selection")
+    object Home : Screen("home")
+    object Library : Screen("Library")
+    object Community : Screen("community")
 }
 
 @Composable
